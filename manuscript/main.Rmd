@@ -1,0 +1,465 @@
+---
+title: |
+  | The Emergence of a New Pilgrimage as an Assurance Game[^thanks]
+author:
+  - Nicolas Restrepo Ochoa[^NR]
+  - Cristina Moya[^CM]
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["multirow", "array", "dcolumn", "forest"]
+bibliography: rituals.bib
+abstract: "Pilgrimage has received longstanding scholarly attention, but most theoretical work focuses on how these rituals can be maintained, rather than the bigger puzzle of how they emerge. Using empirical inspiration from a new pilgrimage in Peru, we address this gap by outlining a theoretical framework more capable of accounting for how these phenomena get off the ground. We contend that the framework of an assurance game (a type of coordination game) captures the challenge of a collective ritual like pilgrimage emerging. By combining this assurance game with a model of Bayesian learning under uncertainty we illustrate how pilgrimage can be institutionalized on occasion. We further argue that our approach sheds light on the relationship between rituals and uncertainty, without having to make strong assumptions about individuals' psychological needs."
+
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+fontfamily: mathpazo
+geometry: margin=1in
+header-includes: 
+  \usepackage{float}
+  \usepackage{array}
+  \usepackage{longtable}
+  \usepackage{algorithm2e}
+  \usepackage{caption}
+  \usepackage{booktabs}
+  \usepackage{setspace}
+  \doublespacing
+---
+
+[^thanks]: We would like to thank the insightful comments from the Cultural and Behavior Adaptation Lab at UC Davis.
+[^NR]: Department of Anthropology, University of California, Davis.
+[^CM]: Department of Anthropology, University of California, Davis.
+
+Word count: `r as.integer(sub("(\\d+).+$", "\\1", system(sprintf("wc -w %s", knitr::current_input()), intern = TRUE))) - 20`
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F, fig.align = "center", fig.pos = "!htp")
+
+library(tidyverse)
+library(extraDistr)
+library(patchwork)
+library(kableExtra)
+theme_set(theme_classic())
+nice_colors <- c("#6d4451",
+                 "#d6cbd3",
+                 "#eca1a6",
+                 "#689f69",
+                 "#bdcebe")
+```
+
+# Introduction
+
+Current theories of pilgrimage are good at explaining why these rituals might endure once institutionalized, but they fall short when it comes to accounting for their emergence. We argue that the emergence of a new pilgrimage is better understood through the lens of an assurance game, a type of coordination game where a collective benefit is arrived at if, and only if, a certain level of collective action is reached. This framework illustrates that the key remaining question becomes how a society clears that initial threshold of actors choosing the social action, i.e. pilgrimage.
+
+For context, we consider an example of a new pilgrimage in the Peruvian Andes. Nuestro Señor de Pucara (NSdP) is a sanctuary on the north side of lake Titicaca, where visitors pay homage to an image of Jesus that appeared on the side of a rock face. The first regional pilgrimage took place in 2014 and currently it boasts thousands of visitors during its main feast days, around the 6th of August. Though the site currently has many devoted followers, opinions in the region about its sacredness are still mixed. Given its recency, this site represents an interesting opportunity to study how a population negotiates the emergence and institutionalization of such a collective ritual.
+
+We begin by situating this analysis within the literature on the group and individual-level value of pilgrimage that help account for the emergence of these collective practices. We then review the conditions that may make pilgrimage emergence more likely and the potential role of pilgrimage site entrepreneurs. Then, we provide further ethnographic context about the new pilgrimage site (NSdP) to motivate the mathematical model. We explain why the framework of an assurance game is useful to illustrate the challenges of a pilgrimage emerging and extend this framework into a Bayesian simulation wherein individuals must learn about the payoffs associated with going on pilgrimage and staying at home and combine these experiences with their prior beliefs. The simulation allows us to explore how (i) prior beliefs about a ritual, (ii) the uncertainty of everyday activities, and (iii) the group's size can affect the emergence and stabilization of a collective ritual like pilgrimage. To close, we add social conventions that constrain pilgrim decision-making to the model.
+
+We find that collective rituals -- such as pilgrimage -- are more likely to emerge in environments where individuals engage in uncertain activities. This is because unlikely, positive outcomes can more readily become associated with behaviors such as paying homage to a site, thus reinforcing the idea that a miracle has been granted. Critically, the structure of the assurance game capitalizes on this early, spurious associations by making it more likely that the pilgrimage practice is stabilized after the population crosses the critical threshold of pilgrims, after which the social benefits of participation kick in. Without such frequency-dependent benefits, uncertainty may even encourage the rejection of this newly established practice. We also find that some belief systems common in the Andean context facilitate the spread of new ritual sites. However, how these beliefs emerge require further investigation and we close by discussing the potential avenues of research these ideas open.
+
+# Background
+
+## Motivations for going on pilgrimage
+
+Social scientists have offered many -- often contradictory -- theories of pilgrimage and its origins [@colemanPilgrimage2021]. The ubiquity and individual costs associated with this collective ritual has made it a prime target for scholarly attention. Some of the more influential theories, based on the work of Durkheim [-@durkheimElementaryFormsReligious1976], appeal to this ritual's capacity to foster a sense of group belongingness. Here, we find Turner and Turner's [-@turnerImagePilgrimageChristian2011] idea of *communitas*: the notion that pilgrimage acts as a liminal space where social hierarchies are broken, thus creating a togetherness among people who would otherwise not interact with one another in everyday life. More recent work, however, has challenged this idea of pilgrimage as a tool for promoting group identity. Pilgrimage, this line of work argues, is a site of contestation, where the interests of local elites and foreign worshipers clash, as do the interpretations of different groups of believers [@eadeContestingSacredAnthropology2000a].
+
+In contemporary, evolutionarily-minded explanations of pilgrimage, the Durkheimian position is still dominant, even if it is not always explicit. The underlying assumption is that pilgrimage does bring about certain collective benefits, and that these benefits often pertain to groups' ability to cooperate and endure [@langMoralizingGodsImpartiality2019; @powerSocialSupportNetworks2017; @sosisAdaptiveValueReligious2004]. An important argument, for instance, is that such rituals engender a sense of *collective effervescence* that strengthens members' sense of belongingness to the group [@fischerExtremeRitualsSocial2014; @lobatoWayFusionPilgrims2020]. Empirical work shows that during arduous collective rituals participants exhibit greater levels of synchronicity on markers like heart rate [@konvalinkaSynchronizedArousalPerformers2011], that after such occasions they feel closer to the group [@lobatoWayFusionPilgrims2020], and that those who take part in these taxing behaviors act more pro-socially [@xygalatasExtremeRitualsPromote2013]. Pilgrimage may marry this cultural technology with the ability to bring together people from different regions.
+
+Arduous rituals like pilgrimage might have additional individual, rather than group-level, functions like communicating about who is legitimately committed to the group's norms and values. This line of argument is known as *the costly signaling approach to collective rituals* [@powerDiscerningDevotionTesting2017; @langAdvertisingCooperativePhenotype2022a; @sosisAdaptiveValueReligious2004]. It notes that these practices are difficult, or not worth it, for non-believers to fake, thus functioning as reliable cues for commitment to a set of beliefs [@powerDiscerningDevotionTesting2017; @chvajaReligiousCostlySignal2023]. The most cogent version of this theoretical position argues that it would only make sense for people with a longer-term stake in group membership to suffer these upfront pilgrimage costs. At the other extreme, people with no intention of staying in a particular moral community would receive no, or little, net benefit from pilgrimage . Therefore, the latter are less likely to engage in the arduous pilgrimage, making this activity a reliable signal of a person's underlying commitment to staying in a given community and being subject to their norm-enforcing institutions.
+
+The above theories share an important shortcoming: they are not well-equipped to explain the emergence of collective rituals such as pilgrimage. The explanations that appeal to rituals' capacities to engender **collective effervescence** do not concern themselves with questions of emergence. In one of the few papers that tries to tackle this question, Kantner and Vaughn [-@kantnerPilgrimageCostlySignal2012] argue that there are two interlocking systems of signaling in the case of pilgrimage: religious leaders signal their causal grip on the world by displaying wealth, while a pilgrim's journey is meant to exhibit an underlying quality of devotion. Unfortunately, this part of the argument again falls short of explaining the origin of the phenomena. All signaling theories of religion presuppose the existence of a connection between the behavior -- going to a shrine -- and an underlying quality -- commitment to a set of norms. This connection does not, by definition, exist at the emergence of a new pilgrimage. In other words, going by oneself on an arduous walk up a mountain is not a pilgrimage, and without communal agreement about its meaning it cannot serve as a signal of devotion.
+
+Once established, a pilgrimage can indeed act as a cue for adherence to a group's norms. Similarly, after a new sacred spot has been identified, interested parties can undertake arduous journeys to the site to convince others of the sincerity [@henrichEvolutionCostlyDisplays2009], if not veracity, of their beliefs . However, at the moment of emergence of a new ritual, there is no agreement yet that the behavior is a signal rather than an indication of lunacy. In this paper, we develop a model that focuses on the ways that such agreement about a pilgrimage – a necessary step before it can act as a signal – can emerge.
+
+## Exogenous circumstances giving rise to pilgrimage
+
+Our model focuses on three factors that we believe relevant to the emergence of a collective ritual like pilgrimage. The first is *prior beliefs* in a given population about the potential value of a new practice, especially when considered against the value of existing alternatives. Continuing with a current course of action may often be expected to be better than an alternative. In the case of the adoption of a new pilgrimage, people might expect that staying home or going to an already established pilgrimage site has a better expected payoff than trying something new. Alternatively, when people are unsure that current practices are leading to high payoffs there may be relatively few opportunity costs to trying something new. In line with these expectations, research on millenarian movements suggest people are much more open to new transformative ideas after cataclysmic events that render traditional practices less effective [@burridgeNewHeavenNew1969].
+
+The second factor we will consider is the *uncertainty* in individuals' everyday subsistence activities. There is a vast literature suggesting that rituals evolve as a way of managing uncertainty [@woodyUncertaintyRituals2006; @xygalatasRitualHowSeemingly2022; @hobsonPsychologyRitualsIntegrative2018]. This suggests that at more uncertain times, more pilgrimage sites may emerge to satisfy this demand. However, such strong predictions merit more careful theorizing. While outcomes that are difficult to predict may motivate people to try out new practices, it is unclear why this uncertainty would not just as readily lead people to discard their value. Uncertainty may also disincentivize investment on the part of religious entrepreneurs [@engStrategiesImprovingNew2009]. Furthermore, many arguments about the benefits of religiosity or ritual conflate harsh conditions (i.e., ones that are predictably difficult) with uncertain ones (i.e., ones that are difficult to predict). Harsh conditions are often implicated in the literature on socio-economic gradients in religiosity within societies [@baimelMaterialInsecurityPredicts2022], and in historical accounts of conditions, such as drought, leading to a greater reliance on ritual [@tejedorRogationCeremoniesKey2019]. However, it is a qualitatively different claim that unpredictable outcomes (e.g., fluctuations between drought and rainfall) may lead people to ritual behaviors.
+
+The last element we will consider is the *size of the groups* within which new pilgrimage traditions might emerge. At the longest historical timescales, reliable evidence of pilgrimage co-occur with other indicators of social complexity [@dietrichCultFeastingNeolithic2012]. Demographic factors like higher population densities and regional scales of integration are often considered root causes of such complex institutions [@richersonInstitutionalEvolution2001]. However, these observations are challenged by the difficulty of detecting pilgrimage practices [@banningGobekliTepeNotPilgrimage2023], particularly those that do not preserve well because they do not result in monumental architecture or other anthropogenic landscape features (e.g., Nazca paths). Indeed the ethnographic literature suggests the importance of sacred sites and the process of getting there in the rituals of many lower-density foraging societies [@whallonSocialNetworksInformation2006]. The role of larger populations or population densities in the emergence of ritual therefore remains unclear.
+
+## Interests of pilgrimage site actors
+
+Not only do prospective pilgrims have to make strategic decisions about attending ritual sites, they often do so in a landscape where religious authorities or locals at different sites have a vested interest in their attendance [@eadeContestingSacredAnthropology2000a; @kantnerPilgrimageCostlySignal2012]. This means that, ultimately, a meaningful theory of pilgrimage must capture the reasons why pilgrims might go on arduous journeys whose causal effects are at best opaque, and it must reflect that pilgrimage sites act as a locus of different actors who have a stake in the continued existence of the collective ritual. In our model, we will explore the implications of two kinds of rules that site-side actors might try to enforce, those about: (i) repeated attendance, and (ii) information sharing.
+
+Norms around attendance relate to a tension that pilgrimage sites have to manage: the extent to which they will entice many visitors versus maintain a stable stream of devoted adherents. While some associated practices may not entail a tradeoff (e.g., both devoted and casual visitors may prefer a pilgrimage site with tasty food), there are some ways both goals may be incompatible. Most notably, having higher ritual expectations may act as a filter that reduces the popularity of a pilgrimage, but ensures that only those most devoted to the practice come and continue coming. Some evidence suggests that religious communes in 19th century US with more expectations of their members survived longer [@sosisCooperationCommuneLongevity2003], perhaps because the requirements selected for people who depended more on the commune. On the other hand, religious communities that have been willing to accommodate diverse and syncretic practices, such as Catholicism, have been relatively effective at spreading, even if their followers have not been as devoted or doctrinaire. Being welcoming of casual practitioners versus restrictive to devoted ones may represent different pathways to success for a pilgrimage site.
+
+A site trying to secure popularity might also exercise different strategies for reputation management. A pilgrimage ritual may come wrapped up in a belief system about the steps necessary to ensure it is effective, about the meaning of supernatural efficacy, and about the information that can be shared. Some evidence suggests that people are more likely to believe that repetitive, multi-step rituals are effective [@legareEvaluatingRitualEfficacy2012]. Demanding a pilgrimage ritual take such a complex form may make it harder to disconfirm its efficacy. This is because a failure to have a miracle granted could be more readily attributed to a pilgrim having missed a step of a complex procedure. Similarly, if miracle granting is related to the pilgrims' own devotion, then having bad luck may be attributed to insufficient faith. Not only would such belief systems be protected from disconfirming evidence, but they may also encourage asymmetries in the information being shared. Pilgrims may more readily share their successes and keep their failures private if the latter will be interpreted as an indication that they are either incompetent or lacking faith. This might establish a chain of biased transmission where news of successful miracle granting are more likely to be passed on than stories of inefficacy.
+
+# Ethnographic Case Study: Nuestro Señor de Pucara
+
+The exogenous factors and site adaptations, whose consequences we choose to model, are rooted in our work studying a newly emerged pilgrimage in the Peruvian Altiplano. Around 2014 people started to congregate around the foothills of a mountain ridge between two provincial towns to the north of Lake Titicaca. They were there to adore the face of Jesus Christ, now imprinted on the rock face. When and how the face got there is a matter of debate among the locals, but reports of its miracle-granting powers were relevant to its origin story. It either granted money to a miner, saved someone from a car crash, or both. Currently, thousands of people flock there in the first week of August to give offerings to Jesus' face, as well as to the representations of other supernatural beings important in Andean traditions that have also shown up in there in stone.
+
+Our interest in examining a group's prior belief in the efficacy of a potential new ritual is based on how NSdP fits within the local ecology of pilgrimage. Like other rituals in the Andes, NSdP can be considered a satellite ritual [@sallnowPilgrimsAndesRegional1987]: its principal dates are borrowed from an older and more established pilgrimage just across the Titicaca, that of the Virgen de Copacabana. In fact, the similarities are such that many locals refer to this site as the "second Copacabana". Many of its devotees have gone to both sites. In a large regional sample collected in 2018, attending Copacabana is positively associated with having paid a visit to NSdP[^1]. The latter then emerges in a cultural context where people are perhaps already predisposed to give a chance to a ritual with its features.
+
+[^1]: Full model specification and results included in the supplementary materials
+
+Our focus on the uncertainty of everyday activities stems from the idea that connections might more readily be noted between rituals and positive outcomes in high-variance contexts. Residents near NSdP experience different degrees and forms of variance depending on the extent to which they rely on mining, commerce or agropastoralism. Agropastoralists might go to a shrine and ask for good crops this season. Most of the time they will get what they expect - an average yet reliable yield - and thus they will not be surprised by the shrine's intercession powers. Now, among miners, outcomes of the activity itself are much more variable. Again, in this context, most of the time the pilgrims will do just as well as they were doing before visiting the shrine. But in rare circumstances, they will get a bountiful reward after visiting the site. If this happens then they might build an association between visiting the site and good fortunes at the mine.
+
+Given that NSdP is a wish-granting site, such associations might emerge. Just as the origin myth highlights how NSdP fills a miner with riches, most attendees seek supernatural help in achieving their goals. In the 2018 data, we see that individuals' beliefs in the wish-granting efficacy of the site is an informative predictor of how many times they have visited the site[^2]. Now, this is by no means indicative of a causal relationship, but it does suggest that wish-granting is of great importance at this site. We might also be skeptical of a causal model wherein going on pilgrimage increases one's belief in the site's wish-granting capacities if information alone drives the effect. Instead, having more information should allow people to make more accurate assessments about the site's inefficacy.
+
+[^2]: Model specifications and results included in the supplementary materials
+
+The site-side strategies we explore in our model also find empirical grounds in our study of NSdP. One recurrent theme in our interviews is that pilgrims must pay three visits to the site for their wishes to be granted. This is a tradition associated with Copacabana and with many of the major religious sites in the region. While this expectation increases the burden of pilgrimage, such an attendance rule might ensure a steady flow of visitors. Second, pilgrims are less likely to share experiences when their wishes are not granted, compared to when they are. In previous work (in progress), Moya et. al. analyze the results of a vignette experiment that asked participants to say whether pilgrims -- whose miracles had or had not been granted -- should tell others about their experiences. They found a bias towards positive information: those whose wishes were granted were more likely to be believed and encouraged to tell their stories. While this asymmetry is not directly norm enforced, failed requests for supernatural help are often interpreted as reflecting a lack of faith [@moyaSiteServingBiasinprep] <!-- it's totally fine to not cite this for now -->.
+
+# Pilgrimage as an assurance game with miracle detection
+
+We contend that the emergence of pilgrimage can be understood through the lens of an assurance game, usually known as a Stag Hunt game (SHG) [@skyrmsStagHuntEvolution2004]. We combine this payoff structure with an additional component: a non-frequency dependent payoff, which in our case represents deviations from the expected gains from everyday economic activities. When these deviations are positive, they could be interpreted as miracles that have been granted.
+
+In the traditional example, the players have two choices: hunting hare or hunting a stag. The first option can be done individually and it provides a small but reliable payoff $h$. Stag hunting, on the other hand, requires coordination. In a two-player game, if both players play the stag strategy, they have enough people to take down a bigger animal and each get a payoff $s$, where $s>h$. However, if only the focal agent decides to go stag hunting, they fail and receive no payoff (see Figure 1).
+
+![Simple Replicator Dynamics and Payoff Matrix](dynamics.001.png)
+
+In the context of pilgrimage $h$ and $s$ represent payoffs to staying home and to going on pilgrimage if enough others do so, respectively. The fact that $h<s$ limits our interpretation of hare hunting to solitary activities that have lower payoffs than a coordinated social activity. That means that $h$ can reflect subsistence or leisure activities that can be done on one's own at home. It does **not** represent the decision to go to a more traditional pilgrimage site. What then is the collective benefit that people draw from attending a pilgrimage that they would not get if they went to the same site alone? For many NSdP attendees a commonly cited reason to go to the site is that it is a nice day out with the family. It is a chance to have some drinks, listen to live music, and even take your kids to the carnival games. Such services would not be provided without a critical mass of others. Pilgrimages could provide other tangible benefits such as the opportunity to forge relationships with, or learn new information from, people from other communities. Our interviewees seldom mentioned making new acquaintances at pilgrimage sites, but this does not preclude it being a value of pilgrimage in other cultural contexts.
+
+Pilgrimage may also provide less immediately tangible group-level benefits that trickle down to the individual level. For example, the notions of *collective effervescence* [@durkheimElementaryFormsReligious1976] or *communitas* [-@turnerImagePilgrimageChristian2011] suggest that shared experiences renew people's commitment to the group. One of the advantages of the assurance game framework is that we do not have to commit to the substantive nature of the collective payoff. What is important is that this payoff is conditional on some coordination. People who go by themselves to a site not yet recognized as a focus of pilgrimage will receive none of these communal benefits of the journey. Worst yet, they might be perceived as unreliable narrators or even as idolatrous.
+
+It is possible then to think about pilgrimage as an $N-$ person assurance game where the benefits of joint activity are achieved only if a threshold number of $M$ people hunt stag [@pachecoEvolutionaryDynamicsCollective2009]. As we are interested in the emergence of pilgrimage, we start with the assumption that most people in the population do not go on the pilgrimage s (i.e., they play the asocial hare-hunting strategy). Rare innovators might venture on lone pilgrimages, but they represent the unlucky stag hunters who go out by themselves. Nonetheless, if enough people go to the site, all attendees will enjoy the collective benefits.
+
+In deciding whether to go on pilgrimage or not, prospective attendees must not only assess the likelihood that others will be going, but also the probability that devotion at the shrine will grant them a wish. This is the key element we add to the framework of an assurance game: a purported miracle granting capacity of a site that adds to the possible perceived benefit of playing the social strategy, but that does not depend on how many others go. That is, one might infer that one's wish has been granted even if not enough others showed up to produce the collective benefits. The origin story of the lone miner who strikes gold reflects precisely this portion of the payoff.
+
+We build on the theoretical framework of the assurance game and turn it into an agent-based simulation that incorporates prior beliefs about the efficacy of the site as well as the non-frequency dependent payoff that can be perceived as miracle-granting. Here, we take the position that the shrine does not actually intercede to change the outcome of events, but that learners may misattribute variation in payoffs due to everyday economic activities to the effect of miracles. We examine the effects of agent's prior beliefs, variance in the payoffs of economic activities, and the population size on the probability that pilgrimage takes off and is stabilized in the population. We then modify the model to incorporate two rules reflecting site-beneficial belief systems; one requiring attending three-times and another promoting only the spread of positive outcomes from the site (and stifling reports of negative outcomes).
+
+# Results
+
+## Pilgrim Strategies
+
+The N-person assurance game has two pure stable equilibria, all pursuing the social and all pursuing the asocial strategy [@pachecoEvolutionaryDynamicsCollective2009]. In other words, a rare individual wanting to engage in pilgrimage will not invade a population of individuals pursuing the asocial strategy. Similarly, a population full of pilgrims will not be invaded by asocial individuals. Once the number of pilgrims in the population surpasses the internal unstable equilibrium the social practice of pilgrimage will spread. How easy it is to move into the basin of attraction for the pilgrimage equilibrium depends on how low this internal equilibrium is, making it easier to clear the initial coordination hurdle.
+
+The easiest way to increase the basin of attraction for pilgrimage is to increase the benefits of the social strategy, and decrease the benefits of the asocial strategy. Note that, barring $h<0$, the social pilgrimage strategy still cannot invade a population of asocial actors, regardless of how much we change these payoffs. In short, the basic assurance game model shows that pilgrimage can never emerge in a population with no pilgrims; the best the model can do is increase the basin of attraction of the collective strategy. For the collective pilgrimage strategy to invade we need to make the assumption that agents perceive benefits to attending the site that are not frequency-dependent. We think a plausible theoretical source of such beliefs might lie in the miracle-granting nature of the shrines.
+
+In our model, agents get payoffs from playing the assurance game (frequency dependent), but they also get variable payoffs from their everyday activities (not frequency dependent). Agents might perceive the latter as the result of a miracle being granted. Most of the time their activities go as expected, and agents receive no unusual gains or losses. In turns when agents play the social strategy *and* get an unusually high payoff from their economic activities, they will attribute their total payoffs to the strategy. The same is true in turns when agents socially learn from unusually successful other pilgrims. In other words, playing the social strategy can become associated with an overall high payoff, even if the frequency-dependent rewards of pilgrimage were not particularly high to start with. Note, agents are just as liable to get an unluckily bad payoff after pilgrimage as a luckily good one. However, the former just cements their pre-existing belief that the asocial strategy is best.
+
+Adding this inherently stochastic process allows populations to *sometimes* cross the internal unstable equilibrium, enter the basin of attraction for the social equilibrium, and reach the stable equilibrium of a population full of pilgrims. Figure 2 shows the trajectories of two runs that illustrate how this equilibrium can be reached. The dark lines represent the proportion of agents who played the social strategy in each turn. The light vertical lines represent the turns where the threshold $M$ was cleared. Here, we notice that the trajectory of the social strategy can take different forms. In panel A, for instance, we notice that the social strategy is rare until the end of the run, where it starts to increase slightly. As the simulation runs, this scenario becomes increasingly unlikely because the agents -- as Bayesian learners -- start cementing their beliefs about the payoff of the social strategy hovering somewhere around zero. It takes a lot of successful turns of collective action towards the end of the simulation to start moving collective beliefs. Panel B, in turn, captures a scenario of quick rise, where the social strategy takes over the population very quickly. Here, we have an example of how a few early successes lead our Bayesian updaters to quickly change their belief and coalesce around the social strategy.
+
+```{r fig.cap="Different patterns of transmission"}
+output <- read_rds("../data/full_bayesian_parameter_exploration.rds")
+
+spec_df <- output[[227]][[1]]
+
+run.names <- c(`2`="A", `5`="A",`19`="B", `43`="D")
+
+
+spec_df %>% 
+  mutate(cleared = ifelse(
+    p >= 1/3, 1, 0
+  )) %>% 
+  ungroup() %>% 
+  filter(run %in% c(5, 
+                    19)) %>% 
+  ggplot(aes(x = turn, 
+             y = cleared, 
+             group = run)) +
+  geom_line(color = nice_colors[1], 
+            alpha = 0.5) +
+  geom_line( 
+    aes(x = turn, 
+        y = p, 
+        group =run), 
+    color = nice_colors[4]) +
+  geom_hline(aes(yintercept = 1/3), 
+             linetype = "dashed", 
+             color = "black") +
+  facet_wrap(~run, labeller = as_labeller(run.names)) +
+  labs(caption = "N=50;PV=1.2;IS=H", 
+       x="", 
+       y="") 
+
+```
+
+It is important to note that most runs in our simulations stay in the asocial equilibrium and do not escape this basin of attraction. However, certain exogenous circumstances described in the introduction make the evolution of pilgrimage more or less likely.
+
+## Exogenous Circumstances
+
+Agents' initial beliefs about the value of playing each strategy have some effects on the likelihood that pilgrimage emerges, and particularly how quickly it does so. We assume that agents begin with beliefs that staying at home is better than going on an untested pilgrimage, but that these beliefs vary in how strongly they are held. That means that the weaker the agents' priors are that staying at home is more profitable than going on pilgrimage, the higher the initial frequency of pilgrims, and thus the more likely the social strategy is institutionalized (see different curves within each panel in Figure 3). This is only a particularly notable effect in smaller populations with low environmental variance. These are the circumstances where weak enough beliefs at the beginning can make it easier to clear the threshold number of pilgrims necessary to make the social activity more profitable than the asocial one.
+
+As hypothesized, environmental uncertainty, operationalized as increased variance in the non-frequency dependent payoff, makes the emergence of the social strategy more likely and swamps the effect of initial beliefs (see increased average frequencies of social strategy as panels go from left to right in Figure 3). Nonetheless, there are diminishing returns to variance, at least in the smaller populations.
+
+Overall, it is harder to get the social strategy institutionalized in larger populations. Larger populations require higher variances for the social strategy to go to fixation. This is because it takes a certain percentage of agents pursuing the social strategy to get the payoff $s$. Imagine that 30% of agents are necessary to pass the threshold for getting the collective benefit in the assurance game. It is harder to coordinate 30 out of 100 people than it is to coordinate 3 out of 10 people. Specifically, the former is less likely because the mechanism responsible for jump-starting pilgrimage in this model relies on chance draws from prior beliefs about payoffs and chance encounters of enough pilgrims. That means that only in a higher payoff variance world would at least 30 people be likely to think that the payoffs of the social strategy were higher than those of the asocial strategy.
+
+```{r fig.cap="Proportion of agents playing the social strategy across parameter combinations."}
+# Create different parameter combinations
+parameter_df <- expand_grid(
+  N = c(10,50,100), 
+  ss2_0 = c(0.33^2, 
+            0.52^2, 
+            0.6^2), 
+  pay_var = seq(from = 0.2, to = 1.6, length.out = 8), 
+  social_biased_learning = c(TRUE, FALSE), 
+  general_biased_learning = c(TRUE, FALSE),
+  tick_reset = c(1,3)
+)
+
+# Filter redundant conditions
+parameter_df <- parameter_df %>% 
+  filter( (social_biased_learning == F & 
+            general_biased_learning == F) | 
+          (social_biased_learning == T & 
+            general_biased_learning == F )| 
+          (social_biased_learning == F & 
+            general_biased_learning == T))
+
+parameter_df <- parameter_df %>% 
+  mutate(hm_0 = 1.5, 
+         hn_0 = 25, 
+         hs2_0 = ss2_0, 
+         sm_0 = 0, 
+         sn_0 = 10, 
+         M = case_when(
+           N == 10 ~ 3, 
+           N == 50 ~ 15, 
+           N == 100 ~ 30
+         )) 
+
+long_form_df <-
+  read_csv("../data/bayesian_parameter_exploration.csv")
+
+long_form_df <- long_form_df %>% 
+  mutate(
+    initial_social = case_when(ss2_0 == 0.1089 ~ "low",
+                                   ss2_0 == 0.2704 ~ "medium", 
+                                   ss2_0 == 0.3600 ~ "high")
+  )
+
+long_form_df$initial_social <- factor(long_form_df$initial_social, 
+                               levels = c("low", "medium", "high"))
+
+long_form_df %>% 
+  filter(social_biased_learning == F & 
+           general_biased_learning == F & 
+           tick_reset == 1, 
+         pay_var %in% c(0.2, 0.8, 1.2, 1.6)) %>% 
+  ggplot(aes(x = turn, 
+             y = m, 
+             color = initial_social)) +
+  geom_line(alpha = 0.8) +
+  facet_grid(N~pay_var) +
+  scale_color_manual(values=c(nice_colors[3], nice_colors[5], nice_colors[4])) +
+  labs(y = "% of social strategy", 
+       x = "Turn", 
+       color = "Init. social strategy") + 
+  theme(legend.position = "bottom")
+```
+
+## Site-side adaptations
+
+First, we consider the implementation of a 3-year attendance rule wherein once a pilgrim has gone once, they commit to going twice more. This means that once an agent plays the social strategy, it will play the same strategy for the next two turns, without drawing from its internal distributions and comparing those draws. We can think about this rule as a retention strategy on the part of the site as it effectively boosts the underlying proportion of pilgrims by sampling non-randomly from the population. The top panel of Figure 4 compares the evolutionary trajectories of pilgrimage behavior in societies with different attendance rules. As expected, the three times attendance rule speeds up dramatically the pace at which the social strategy goes to fixation[^3].
+
+[^3]: In the supplementary material, we show a more analytical approach to understanding the effects of this sampling strategy.
+
+Second, we consider the consequences of a normative system where only positive experiences at the site are shared. We operationalize this in two ways. First, we consider a condition where among the agents who played the social strategy, only those whose payoffs were better than the expected payoff for staying at home could serve as potential demonstrators. In short, among the pilgrims, only the lucky ones would talk about their experiences. Second, we think about this bias more widely: what if people in general are just more likely to report positive experiences? In terms of our model, this means that all agents -- regardless of the strategy they chose to play -- will be taken out of the pool of demonstrators if their payoff is below the expected payoff of the asocial strategy.
+
+The bottom panel of Figure 4 zooms into one particular parameter combination, and explores the effect of the different transmission conditions. As expected, the condition wherein the pilgrims only serve as demonstrators if they did better than expected helps the spread of the social strategy. Incorporating this transmission bias makes it so that the social strategy reliably -- and quickly -- spreads across the population. Interestingly, a generalized positivity bias slightly hampers the transmission of the social strategy (Figure 4). This is because, even though only the lucky pilgrims are sharing their stories, only the lucky ones among the agents playing the asocial strategy also serve as demonstrators. Early on in the runs asocial models are more common than social ones meaning that agents can more quickly learn this positively biased information about the asocial strategy and thus cement their belief that pilgrimage is not worth it. This illustrates that any positivity bias has to be very specifically structured to favor the pilgrimage site for it to improve its odds of spreading.
+
+```{r, out.width="100%", fig.cap="Trajectories of the social strategy for different attendance and transmission rules"}
+long_form_attendance <- long_form_df %>% 
+  mutate(attendance_condition = case_when(
+    social_biased_learning == F & 
+           general_biased_learning == F & 
+           tick_reset == 3 ~ "Three times", 
+    social_biased_learning == F & 
+           general_biased_learning == F & 
+           tick_reset == 1 ~ "No rule", 
+  )) %>% 
+   filter( N == 50 & 
+            pay_var == 1.2 & 
+            !is.na(attendance_condition)) 
+
+
+long_form_attendance$initial_social <- factor(long_form_attendance$initial_social, 
+                               levels = c("low", "medium", "high"))
+
+p1 <- long_form_attendance %>% 
+  ggplot(aes(x = turn, 
+             y = m, 
+             color = initial_social)) +
+  geom_line(alpha = 0.8) +
+  facet_wrap(~attendance_condition) +
+  scale_color_manual(values=c(nice_colors[3:5])) +
+  labs(y = "% of Social Strategy", 
+       x = "Turn", 
+       color = "Init. Social Strategy") + 
+  theme(legend.position = "none") +
+  ylim(c(0,1))
+
+long_form_transmission <- long_form_df %>%
+  mutate(
+    bias_condition = case_when(
+    (social_biased_learning == F &
+      general_biased_learning == F &
+      tick_reset == 1) ~ "No Bias",
+    (social_biased_learning == T &
+      general_biased_learning == F &
+      tick_reset == 1) ~ "Lucky Pilgrim",
+    (social_biased_learning == F &
+      general_biased_learning == T &
+      tick_reset == 1) ~ "Generalized Positivity Bias"
+  )) %>% 
+  filter( N == 50 & 
+            pay_var == 1.2 & 
+            !is.na(bias_condition))
+
+p2 <- long_form_transmission %>% 
+  ggplot(aes(x = turn, 
+             y = m, 
+             color = initial_social)) +
+  geom_line(alpha = 0.8) +
+  facet_wrap(~bias_condition) +
+  scale_color_manual(values=c(nice_colors[3:5])) +
+  labs(y = "% of Social Strategy", 
+       x = "Turn", 
+       color = "Init. Social Strategy") + 
+  theme(legend.position = "none") +
+  ylim(c(0,1))
+
+p1 /p2 + patchwork::plot_layout(guides = "collect")
+```
+
+# Discussion
+
+It is estimated that over 150 million people go on pilgrimage every year, in practices that span all major world [religions](http://www.arcworld.org/downloads/ARC%20pilgrimage%20statistics%20155m%2011-12-19.pdf). This fact alone is puzzling enough given costs associated with rituals whose payoffs are -- at best -- difficult to ascertain. However, understanding the origins of such practices is an even larger challenge than explaining their persistence. We have developed a model that helps explain this puzzle.
+
+We argue that current theories of pilgrimage fall short when it comes to explaining the emergence of this phenomenon. We use an assurance game to illustrate the difficulty of getting a new collective practice off the ground. Even if a society with pilgrimage does better than one without the practice, early adopters of pilgrimage risk being ostracized. Indeed, several people in the region surrounding NSdP, including Catholics, believe the apparition of Jesus is a natural formation, the work of clever religious entrepreneurs, or worst yet, the work of the devil. Furthermore, early adopters will not receive the frequency dependent benefits that come from joining others at the same place. In other words, rare individuals who adopt a practice like pilgrimage early on will suffer relative to those who stay at home, making it impossible for the practice to spread through selection or payoff-biased learning.
+
+Since the dynamics of an assurance game alone cannot explain the emergence of pilgrimage we incorporate a decision-making process common to religious pilgrimage sites: asking for wishes at the sites and judging them on their ability to grant these. When asked whether NSdP actually grants miracles, pilgrims often responded *"one does not go just for fun"*. There is, then, a perceived benefit that pilgrims derive that is not frequency-dependent. In the model, this is operationalized as an uncertain frequency independent payoff that reflects the rewards people get from everyday economic activities, but that agents may nonetheless interpret as the result of a miracle. People considering whether or not to go on pilgrimage may weigh their own previous experiences at the site, and the experiences reported by others regarding their returns for that year. This is reflected in the learning process of agents in the model – they update their beliefs both through individual and social learning. On average we assume the same frequency independent payoffs for pilgrims and non-pilgrims (i.e., there are no miracles). This means that for most runs the population will stay at the asocial (staying at home) equilibrium. However, there can be lucky runs where enough people have weak enough priors about the payoffs of both behaviors, that they decide to try pilgrimage, and by chance happen to do better than expected that year. Importantly, while it is these lucky coincidences that can get the pilgrimage behavior off the ground, it is the assurance game dynamics that stabilizes it into a tradition – i.e., an equilibrium which is hard to escape.
+
+Having shown that merging an assurance game with Bayesian updating under uncertainty can sometimes lead to the emergence and stabilization of pilgrimage, we then explore the circumstances under which this is more likely. We report the results of varying three parameters; uncertainty in everyday economic activities, agents' prior beliefs about the payoffs of each activity, and population size. First, variance in the frequency-independent payoffs increases the probability that the social strategy goes to fixation. Second, when agents have weaker prior beliefs about the payoffs of pilgrimage and staying at home, the more of them will go on pilgrimage early on, leading to a faster increase in the social strategy. Lastly, we notice that the effect of variance is moderated by the size of the group. As the groups grow in size, more variance is needed in order to get the social strategy off the ground. This is because we keep the threshold after which the collective benefit is acquired as a proportion, rather than an absolute number. For this reason, it is easier to overcome that threshold through chance events for smaller populations.
+
+Lucky coincidences of pilgrims who do better in their everyday activities than non-pilgrims are more likely to happen in environments with high payoff variance. This means we can account for the higher likelihood of the development of ritual in uncertain environments without having to make reference to psychic needs or an inherent human drive for certainty. The economic situation of pilgrims in the NSdP region may be such an uncertain context. In the Altiplano, people traditionally made a living from agropastoralism, with an increasingly mixed economy that incorporates commerce and mining. Because much of the commerce involves contraband, its payoffs can be rather uncertain (e.g., will the national police stop you, will you be able to bribe them etc.). However, gold mining is an even more variable source of income, and an increasingly popular one in the region. La Rinconada, about a 2-hour bus ride away, is an informal, and therefore poorly regulated, mining center where people may strike it rich, but may also succumb to debilitating, or even lethal, injuries. NSdP is found in a rural area where people still engage in a fair amount of subsistence agro-pastoralism, but it also lies on the recently asphalted road that connects the largest city in the region to La Rinconada. Not only have many interviewees in the region referred to NSdP as a miner's site by way of explaining their non-attendance, the site itself has sacred spaces clearly dedicated to asking for help in mining, such as a rock formation called "the mine" and one of a toad, a creature traditionally associated with guarding gold. This economic context means that the Peruvian Altiplano essentially has different populations facing different levels of risk. Our model can help explain why a pilgrimage site catering to those with more uncertain outcomes, like miners, would be more likely to emerge than one catering to those with more certain outcomes, like agropastoralists. Indeed, much ethnographic literature has documented the specific rituals miners adopt around the world [@handCaliforniaMinersFolklore1942; @addeiMythsSuperstitionSmall2011], and some of our interviewees share the intuition that miners are particularly superstitious.
+
+Perhaps not surprisingly, when agents are unsure about the payoffs of staying at home versus going on pilgrimage they are more likely to try out the new social activity, thus seeding a population with a higher proportion of pilgrims from the start and making it more likely that pilgrimage gets established. In the Peruvian Altiplano, we have reason to believe that people's priors were relatively favorable to the value of a new pilgrimage site. The Andean religious landscape already counts several pilgrimage sites with relatively similar traditions making it more likely that another one could be added to the list of sacred sites [@sallnowPilgrimsAndesRegional1987]. Furthermore, our participants commonly cite a meta-norm that it matters more that one is devoted to a ritual site, than that one has faith in any particular site.
+
+The fact that larger populations are harder to coordinate is reflected in the lower probability that lucky runs stabilize pilgrimage when groups are larger. Whether this assumption is warranted for the origin of pilgrimage depends on the ways we conceive of its frequency-dependent payoffs. The current instantiation of a threshold percentage of the population needing to be on board to get the collective payoff represents the fact that there are social and reputational costs to going on pilgrimage if others are not on board. However, if there were just a threshold *number* of people needed to get the collective benefits of pilgrimage, then larger populations would facilitate the development of pilgrimage. The asocial people would stay at home in such a situation and neither contribute to, nor detract from, the collective payoffs. The fact that some of our interviewees are contemptuous of people who go to the site, leads us to believe it is more appropriate to treat the threshold as a percentage of the population.
+
+Finally, we modified the model to explore some cultural norms surrounding the NSdP pilgrimage site that might help ensure its successful institutionalization. In previous work, our team has explored participants' beliefs about what news about the site should be transmitted. In general, we have found a bias towards positive experiences, where respondents think lucky pilgrims should share their stories but those whose wishes have not been granted should keep that to themselves. We implement two variations of this transmission rule in our model: one where, among those agents who play the social strategy, only those who got lucky serve as demonstrators; the other where all agents, regardless of strategy, only share their stories if they did better than the expected payoff for the asocial strategy. The former, unsurprisingly, helps the social strategy go to fixation much more quickly. The latter, if anything, has a negative effect by making it less likely that agents will contrast positive experiences with the social strategy with those of the agents who played the asocial one and did worse than expected. We have also found that a common rule for Andean shrines is that one must visit them three times for one's wishes to be granted. We build this attendance rule into our simulation and the results highlight -- unsurprisingly -- that by having individuals attend at least three times, the site artificially bolsters the amount of coordination and this quickly propels the social strategy to fixation. However, our participants are aware of these rules, and some even hesitate to commit to going precisely because of the considerable commitment that would follow, suggesting a possible cost to the pilgrimage site of demanding such investment.
+
+# Limitations and future directions
+
+Our model makes several simplifying assumptions that may limit the generalizability of our conclusions and merit future investigation. We treat the frequency dependent and frequency independent payoffs in this model as fungible. In other words, as agents learn about the possible benefits of using the social and asocial strategy they can only see the sum of the payoffs that pilgrims get from going to the site, and those they get from their everyday activities. We believe this is a plausible reflection of the ways people learn about the payoffs of going on pilgrimage – participants often report hearing stories from others about their well-being and economic success after going on pilgrimage, but no one has suggested that the stories differentiate the benefits accrued from going to a social gathering (e.g., information, social capital) from the benefits accrued after the fact due to purportedly miraculous events. Future models can incorporate some ability to discern the source of payoffs and examine the extent to which this erodes the spread of pilgrimage.
+
+We also ignore any group-level population structure in this model, despite the common appeals to the collective benefits of ritual and pilgrimage in the theoretical literature. It is plausible that the benefits of *communitas* [@turnerImagePilgrimageChristian2011] or *collective effervesence* [@durkheimElementaryFormsReligious1976] are more accurately captured as a group-level outcomes that are copied from group to group rather than from individual to individual. If this copying happens through a consensus building process this would entail fewer coordination costs for the early adopters. In the NSdP case, we do not believe communities are organizing themselves for the pilgrims' collective benefits thus making the panmictic population assumption appropriate for our question. However, we do see some evidence that religious entrepreneurs at the site are engaged in group-level copying, borrowing popular elements of other religious shrines like those at the Virgen de Copacabana. A population-structured model would certainly be worth exploring, perhaps to understand changes at larger time scales.
+
+We have discussed strategic considerations from the perspective of the site briefly, but not modeled the co-evolution of these rules with pilgrim strategies. For example, the site-benefiting rules of returning three times and only sharing positive information raises the question of why pilgrims would go along with these constraints. We could consider that individuals are aware of these upfront costs. A common theme during our interviews was the reluctance to commit to attending the site if one does not have the time or resources to fulfill the requirements. This observation suggests that at least some participants have indeed internalized this rule, but also that they are thinking strategically about the costs of the whole multi-year enterprise. In the language of our theoretical model, this means engaging in the collective strategy would entail forgoing 3 times the asocial payoff -- $3h$ . If this is the case, then the question goes back to the relationship between the costs and benefits of both strategies. We recognize that a more complicated co-evolutionary arms race between the pilgrimage site entrepreneurs and the prospective pilgrims may better capture the potential conflicts of interests between them. The framework of our model also implies that the pilgrimage sites benefit most from enticing many visitors rather than maintaining a stable stream of devoted adherents. This means that our model does not adequately capture the emergence of rituals that rely primarily on a small, but fervent, pool of adherents.
+
+The model also provides further fodder for empirical tests. For example, when examining the possible relationship between uncertainty and adoption of new rituals we may want to focus on measures of uncertainty that capture the difficulty of making causal attributions rather than ones that capture psychic needs or anxieties. We can also examine how prospective pilgrims' prior beliefs influence the likelihood that a community adopts a new practice. For example, it may not be surprising that local evangelicals are much less willing to grant that NSdP has supernatural powers given their strong priors that idols do not have magical powers. Other predisposing or protective prior beliefs in the population are worth exploring. Finally, at a longer time scale, we hope the model helps provide conceptual clarity for anthropologists and archaeologists thinking about the role of population size in the development of collective rituals. If indeed population density is a predisposing factor for pilgrimage, our model would suggest it is despite the coordination costs associated with getting larger communities on the same page.
+
+# Conclusion
+
+We have argued that the assurance game provides a way of stabilizing those early chance associations that agents may learn between ritual and good fortunes, and thus help new rituals go to fixation. Variance is by definition a double-edged sword and extraordinarily good days at the mine are just as likely as hazardous ones. If it were just about variance, then, even lucky pilgrims would get quickly disenchanted after going to the site if it is followed by less than ideal outcomes, as it is bound to happen under our assumptions. However, the framework of the assurance game makes it so that if enough critical mass is garnered -- through these early associations -- then the benefits of the site do not hinge exclusively on its perceived causal powers but also on the very occasion that represents going to it. In other words, we move from a distribution centered at $0$ to a distribution centered at $s$ -- the collective benefit. And this makes it likely for the collective ritual to become institutionalized.
+
+Proposing a relationship between rituals and uncertainty is not new in social scientific theory, but we believe we provide a plausible mechanism for the relationship between these variables. Perhaps the most prominent example of this connection in the literature is Malinowski treatment of ritual in the Trobriand islands. He notes that fishermen tend to use rituals more before going out to sea, as opposed to still waters. It is the uncertainty and danger of going to sea -- the argument goes -- that leads individuals to perform rituals. The latter provide a sense of agency and control over an environment that is very much out of our grasp. Here lies the key difference with our argument. We are not appealing to any psychological need for a sense of mastery over the environment. What we argue is more prosaic. More variable contexts are more likely to give rise to extraordinary outcomes which can, in turn, be associated with certain practices and/or rituals. If there is a way of capitalizing on those early associations -- like the collective benefit provided in the assurance game -- then those practices can spread and become institutionalized
+
+# Methods
+
+## N-person assurance game
+
+For the sake of simplicity, assume we are drawings groups of size $N$ from an infinite and well-mixed population (see for reference [@pachecoEvolutionaryDynamicsCollective2009]). In the population, $x$ represents the proportion of people who are willing to go on the pilgrimage. Say that for the pilgrims to reap the collective benefits of their endeavor, there need to be at least $M$ ritual goers, and that $k$ is the actual number of people who show up. Thus, if $k-M<0$ then the threshold is not cleared, and the few enthusiasts do not reap the collective benefits of the rituals. Keeping the notation from above, we note that the function defining the fitness for those who do not go to the ritual is:
+
+$$ \pi_H(k) = h $$
+
+This is an asocial strategy so the payoff is always the same, regardless of what the other players are doing. For the ritual-goers the payoff is defined by:
+
+$$ \pi_S(k) = \theta(k-M) s $$
+
+Where $\theta(k-M)$ is a stepwise function that returns 1 if $k-M \geq 0$ or 0 otherwise. This means that the focal agent gets the benefit $s$ if enough people show up and leaves empty-handed otherwise.
+
+To calculate the average payoff of each strategy, we sum the payoffs across the different compositions of size $N$ of pilgrims and non-pilgrims, and we weight them by the likelihood of seeing those combinations. Thus:
+
+$$ f_H = \sum_{k=0}^{N-1}{N-1 \choose k} x^k (1-x)^{N-k-1}\pi_H(k)$$
+
+$$ f_S = \sum_{k=0}^{N-1}{N-1 \choose k} x^k (1-x)^{N-k-1}\pi_S(k + 1)$$
+
+<!-- i'm probably missing something basic... something like the self is included in the count... but not sure why we're summing fitnesses of k+1 for stag and just k for hare -->
+
+We are interested in how the proportion of pilgrims going to the site, $x$, would develop across time. The replicator dynamics are determined by the variance of the trait and the difference between the expected payoff of the two strategies:
+
+$$ x' = x(1-x) (f_S - f_H)$$
+
+where $f_S - f_H$ can be rewritten as:
+
+$$ -h + \sum_{k=M-1}^{N-1}{N-1 \choose k} x^k (1-x)^{N-k-1}s $$
+
+What this expresses is that pilgrimage will increase as a strategy if there is positive difference between the payoff of not attending and the benefits acquired by attending weighted by the probability of getting enough people to go to the site conditional on the existing proportion of pilgrims.
+
+## Bayesian learning of miracle detection
+
+To model how individuals would learn about the miracle-granting capacities of a site, we turn to an agent based simulation. The key addition to this model is that agents' total payoffs are affected both by the frequency dependent payoffs of the assurance game, and by the frequency-independent economic activities they regularly engage in. The latter payoffs are affected by variance in the environment, which is meant to capture the uncertainty associated with people's everyday subsistence or economic activities. The original payoffs of each strategy then might be distorted by the variance of the environment. We allow for the scenario where things happen in sequence such that - from the perspective of the pilgrim - there could be a causal link between the pilgrimage and particularly good - or bad - outcomes.
+
+In our agent-based simulation, agents live in a more or less uncertain world. Each agent is a Bayesian updater. They have two prior Gaussian distributions for the payoff of each one of the strategies, staying at home and going to the site. At the beginning of each, they take a random draw from their internal perceptions and they play the strategy corresponding to the highest draw (see Table 2). After receiving the payoff for the chosen strategies -- accounting for the variance of the environment --, the agents update both parameters of their underlying priors for each strategy, the mean and standard deviation. Then, they learn socially from a randomly chosen demonstrator. They pick another agent at random, observe the strategy they played, and the payoff they received. This information too affects agents internal beliefs about the payoff distribution associated with each strategy. Agents, then, learn about the actual payoffs for each strategy, and become habituated with certain chains of action. In other words, if you usually observe that the social strategy leaves its practitioners empty handed, while the asocial one yields a reliable payoff, you become increasingly more likely to just play the latter.
+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Table 3: Model Sequence**                                                                                                                                                                                  |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Initialization**                                                                                                                                                                                           |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 1.  The environment is initialized with an uncertainty given by $\mathcal{N} \sim (\mu_{E}, \sigma_{E}^2)$                                                                                                   |
+| 2.  Each agent starts with a prior for the the two behaviors (social and asocial strategies), defined by $\mathcal{N} \sim (\mu_{b_1}, \sigma_{b_1}^2); \space \mathcal{N} \sim (\mu_{b_2}, \sigma_{b_2}^2)$ |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Modeling Sequence**                                                                                                                                                                                        |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| For each agent:                                                                                                                                                                                              |
+|                                                                                                                                                                                                              |
+| 1.  **Choose behavior based on beliefs:**                                                                                                                                                                    |
+|     1.  Take random draw from one's priors; $\mathcal{N} \sim (\mu_{b_1}, \sigma_{b_1}^2) \space \text{and}  \space \mathcal{N} \sim (\mu_{b_2}, \sigma_{b_2}^2)$                                            |
+|     2.  Play the strategy associated with the distribution that produced the higher draw.                                                                                                                    |
+| 2.  **Individually learn:**                                                                                                                                                                                  |
+|     1.  Frequency dependent payoffs: Calculate payoff related to that strategy (payoff is conditional on whether enough others agents played the social strategy).                                           |
+|     2.  Frequency-independent payoffs: <!-- should mu be 0 here & in #5? --> Add variance to that payoff drawn from $\mathcal{N} \sim (\mu_{E}, \sigma_{E}^2)$                                               |
+|     3.  Update priors for the chosen strategy based on $\text{payoff} +\mathcal{N} \sim (\mu_{E}, \sigma_{E}^2)$                                                                                             |
+| 3.  **Socially learn:**                                                                                                                                                                                      |
+|     1.  Learn from a random demonstrator and learn about their chosen strategy and behavior.                                                                                                                 |
+|     2.  Update prior for the strategy played by demonstrator based on their payoff.                                                                                                                          |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+## Model parameters
+
+There are many parameters in this model -- summarized in Table 3 -- but we explore three key elements that map onto variables of theoretical interest. The first is related to the initial number of pilgrims we can expect at the onset of the simulation. This is a function of the priors assigned to each strategy to begin with: the overlap of both distributions tell us how likely it is to get agents that play the social strategy. We systematically vary the standard deviation of the Gaussian priors to get three scenarios: one where the expected number of pilgrims at the onset is 1%, the other where it is 5%, and the last one where it is 10%.
+
+```{r}
+parameter_tab_df <- tibble(
+  Parameter = c('$T_{Max}$',
+                '$R_{Max}$', 
+                '$N$', 
+                '$M$', 
+                '$PV$',
+                '$AP$', 
+                '$SP$', 
+                '$\\mu_{A}$', 
+                '$\\mu_{S}$', 
+                '$\\sigma_{A}$', 
+                '$\\sigma_{S}$', 
+                '$\\upsilon_{A}$', 
+                '$\\upsilon_{S}$'),
+  Description = c("Numer of turns.", 
+                  "Number of rounds.", 
+                  "Number of agents.", 
+                  "Threshold for the social payoff.", 
+                  "Payoff variance.", 
+                  "Asocial payoff.", 
+                  "Social payoff (when threshold cleared).", 
+                  "Prior mean for the asocial strategy.", 
+                  "Prior mean for the social strategy.",
+                  "Prior variance for the asocial strategy.", 
+                  "Prior variance for the social strategy.", 
+                  "Prior certainty for the asocial strategy (it can be interpreted as prior sample).",
+                  "Prior certainty for the social strategy (it can be interpreted as prior sample).")
+)
+
+kable(parameter_tab_df, 
+      "latex", 
+      align = "c", 
+      booktabs=TRUE, 
+      escape = F, 
+      caption="Parameter List")
+```
+
+The second element is related to the variance of the environment. This parameter is common to all agents, regardless of what strategy they play. In other words, in a more uncertain environment, the social strategy can yield big payoffs even if not enough people play it, and the asocial strategy can prove deleterious. But variance goes both ways and this means that it can shrink the collective benefit of the social strategy, even if enough people are playing it.
+
+The last element is the number of agents in the simulation. Given that we are considering a non-frequency dependent element, the number of agents might play a big role. In a small population, one unlikely outcome -- branded as a miracle -- might be enough to incite the whole group into playing the collective strategy. However, for such a large population, that one-time occurrence might not be enough to move the cemented opinions of the majority of the population. We explore the simulation with 10, 50, and 100 agents. Every time we let $M = \frac{1}{3}$ of the population.
+
+We then have $3 \times 8 \times 3 = 72$ conditions. For each parameter combination, we run 50 rounds, each consisting of 300 time-steps and track the proportion of agents playing the social strategy.
+
+\newpage
+
+## References:

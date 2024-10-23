@@ -1,0 +1,196 @@
+---
+title: "Supplementary Materials"
+author: "Nicolas Restrepo & Cristina Moya"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+bibliography: rituals.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+library(tidyverse)
+theme_set(theme_classic())
+library(brms)
+```
+
+## Set-Up
+
+To fit the models mentioned in the text, we use data collected by a research team in 2018. The team -- consisting of 8 interviewers -- conducted interviews with 638 participants in the region north of Lake Titicaca. The survey consists of a wide range of questions, from standard demographic items to tests about face paraedolia. The data represent a convenience sample from 4 districts surrounding the pilgrimage site, so is likely to be unrepresentative of people in the region. The data collection sites, however, were selected to represent equally places that are primarily Quechua and Aymara speaking, as well as locations from which the pilgrimage site is more or less accessible. We use this dataset to fit both models presented below.
+
+```{r}
+d <- read_csv("../data/clean_pucara_regional.csv")
+```
+
+## Is perceived miracle-granting efficacy associated with pilgrimage?
+
+We begin by examining the relationship between the perceived miracle-granting efficacy of Nuestro Señor de Pucara (NSdP) and the number of times participants have reported attending the it. The main outcome is numeric and the explanatory variable is categorical with four responses: "unsure", "medium", "very sure", and "only if faith." This last category comprises a common response among participants: they agree that the site can grant wishes but only if the pilgrim has enough faith. After deleting cases with incomplete data or invalid responses, we are left with 550 observations.
+
+We fit a Bayesian multi-level model, where we let intercepts and the slopes of the effect of perceived efficacy vary by interviewer. This accounts for the possibility that different interviewers induced different responses about pilgrimage going, or about the role of efficacy in explaining pilgrimage. In the model, we regress the number of times individuals report going to the site on their belief in NSdP's wish-granting. We adjust for respondents' age, sex, and educational attainment. Cohort effects, gendered religiosity and mobility norms, and education as a proxy for market integration may confound the relationship between our main variables of interest.
+
+The following plot shows the mean predicted times attended for each level of perceived efficacy, with dashed lines covering the 95% confidence intervals:
+
+```{r fig.cap="Predicted attendance to NSdP based on perceptions of its miracle-granting efficacy"}
+model_df <- d %>% 
+  mutate(
+    x18a_llegado_pucara = case_when(
+      x13a_pucara_oye1 == 0 ~ 0, 
+      x18a_llegado_pucara == 333 ~ NA_real_, 
+      TRUE ~ x18a_llegado_pucara
+    ),
+    veces_numeric = case_when(
+      x18a_llegado_pucara == 0 ~ 0,
+      x18c_pucara_veces == "0" ~ 0,
+      x18c_pucara_veces == "1" ~ 1, 
+      x18c_pucara_veces == "2" ~ 2, 
+      x18c_pucara_veces == "3" ~ 3, 
+      x18c_pucara_veces == "4" ~ 4, 
+      x18c_pucara_veces == "5" ~ 5, 
+      x18c_pucara_veces == "6" ~ 6, 
+      x18c_pucara_veces == "7" ~ 7, 
+      x18c_pucara_veces == "8" ~ 8, 
+      x18c_pucara_veces == "9" ~ 9, 
+      x18c_pucara_veces == "10" ~ 10, 
+      x18c_pucara_veces == "11" ~ 11,
+      x18c_pucara_veces == "12" ~ 12,
+      x18c_pucara_veces == "20" ~ 20,
+      x18c_pucara_veces == "mas de 10" ~ 10,
+      x18c_pucara_veces == "constante" ~ 20,
+      x18c_pucara_veces == "diario" ~ 20,
+      x18c_pucara_veces == "siempre" ~ 20,
+      x18c_pucara_veces == "varias veces" ~ 3,
+      is.na(x18c_pucara_veces) ~ NA_real_, 
+      x18c_pucara_veces == "na" ~ NA_real_,
+      x18c_pucara_veces == "NP" ~ NA_real_,
+      x18c_pucara_veces == "N" ~ 0,
+      x18c_pucara_veces == "NR" ~ NA_real_,
+      x18c_pucara_veces == "np" ~ NA_real_,
+      x18c_pucara_veces == "nr" ~ NA_real_,
+    ), 
+    x21a_pucara_cumple = as.character(x21a_pucara_cumple),
+    x21a_pucara_cumple = case_when(
+      x21a_pucara_cumple == "nr" ~ NA_character_, 
+      x21a_pucara_cumple == "np" ~ NA_character_, 
+      x21a_pucara_cumple == "na" ~ NA_character_, 
+      is.na(x21a_pucara_cumple) ~ NA_character_, 
+      TRUE ~ x21a_pucara_cumple
+    )
+  ) %>% 
+  select(
+    entrevistador_a, 
+    veces_numeric, 
+    x21a_pucara_cumple, 
+    x18a_llegado_pucara, 
+    x31_sexo, 
+    x35_educacion, 
+    x33_edad
+  ) %>% 
+  drop_na() %>% 
+  mutate(
+    x21a_pucara_cumple = factor(x21a_pucara_cumple),
+    x21a_pucara_cumple = relevel(x21a_pucara_cumple, ref = "unsure")
+  ) %>% 
+  filter(
+    x21a_pucara_cumple != "dunno"
+  )
+
+output1 <- capture.output(m2 <- brm(veces_numeric ~ (1  + x21a_pucara_cumple | entrevistador_a) + x21a_pucara_cumple + x31_sexo + x35_educacion + x33_edad, 
+          data = model_df, 
+          family = "gaussian", 
+          cores = 6, 
+          backend = "cmdstanr", 
+          silent = T))
+
+p <- conditional_effects(m2, "x21a_pucara_cumple") 
+
+p[[1]] %>% 
+  mutate(
+    pucara_cumple = case_when(
+      x21a_pucara_cumple == "unsure" ~ "Unsure",
+      x21a_pucara_cumple == "medium" ~ "Medium", 
+      x21a_pucara_cumple == "only_if_faith" ~ "Only if faith", 
+      x21a_pucara_cumple == "very_sure" ~ "Very Sure"
+    ), 
+    pucara_cumple = factor(pucara_cumple, 
+                           levels = c("Unsure", 
+                                      "Medium", 
+                                      "Very Sure", 
+                                      "Only if faith"))
+  ) %>% 
+  ggplot(
+    aes(
+      x = pucara_cumple, 
+      y = estimate__
+    )
+  ) +
+  geom_point(pch = 21, 
+             size = 2, 
+             fill = "#6d4451") +
+  geom_linerange(aes(ymax = upper__, 
+                     ymin = lower__), 
+                 linetype = "dashed") +
+  labs(x = "NSdP grants wishes?", 
+       y = "Predicted times attended")
+  
+
+```
+
+We notice that individuals who are "very sure" that the site grants wishes report having paid a visit multiple times, while those less sure of the site's efficacy report fewer visits to it on average. This model shows a relationship between perceived efficacy and times attended, but of course cannot be interpreted causally. It seems equally plausible that belief in the site's miracle granting powers motivates attendance, or that attendance provides incentives for believing in its miracle granting powers.
+
+## Is attending a well-established pilgrimage site associated with attending a new site? 
+
+In the main text, we mention that there might be a relationship between previous ritual-going habits and the adoption of a new ritual. In fact, the relationship between main sites and new satellite rituals is not new in the literature about pilgrimage in the Andes [@sallnowPilgrimsAndesRegional1987]. In the following model, we explore the relationship between having gone to Copacabana -- a centuries-old pilgrimage -- and having gone to the newly emerged ritual site.
+
+To do this, we build a Bayesian multi-level model that regresses attendance to NSdP on attendance to Copacabana. Given that the outcome variable is binary, we use a logit link function. Like in the model above, we let both the intercept and the slope of the model to vary by interviewer to account for potential interviewer effects. We also adjust for respondents' age, sex, and educational attainment. After removing cases with invalid or incomplete data, we fitted the model on 607 observations.
+
+The following plot shows the predicted probability of attending NSdP for individuals that have and have not reported going on pilgrimage to Copacabana.
+
+```{r fig.cap="Predicted probability of attending NSdP based on previous attendance to Copacabana"}
+model_df <- d %>% 
+  mutate(x10b_llegado_copa = case_when(
+    x10b_llegado_copa %in% c(333, 555) ~ NA_real_, 
+    TRUE ~ x10b_llegado_copa
+  )) %>% 
+  select(
+    x18a_llegado_pucara, 
+    x10b_llegado_copa, 
+    entrevistador_a, 
+    x31_sexo, 
+    x35_educacion, 
+    x33_edad
+  ) %>% 
+  drop_na()
+
+output2 <- capture.output(puca_copa_mod <- brm(x18a_llegado_pucara ~ (1 + x10b_llegado_copa | entrevistador_a) + x10b_llegado_copa + x31_sexo + x35_educacion + x33_edad, 
+                data = model_df, 
+                backend = "cmdstanr", 
+                prior =  c(prior(normal(0, 1), class = Intercept),
+                           prior(normal(0, 5), class = b),
+                           prior(cauchy(0, 5), class = sd)), 
+                family = "bernoulli"))
+
+p <- conditional_effects(puca_copa_mod, "x10b_llegado_copa") 
+
+p[[1]] %>% 
+  filter(effect1__ == 0 | effect1__ == 1) %>% 
+  mutate(llegado_copa = ifelse(x10b_llegado_copa == 1, "Yes", "No")) %>% 
+  ggplot(aes(x = llegado_copa, 
+             y = estimate__)) +
+  geom_point(pch = 21, 
+             size = 2, 
+             fill = "#6d4451") +
+  geom_linerange(aes(ymax = upper__, 
+                     ymin = lower__), 
+                 linetype = "dashed") +
+  labs(y = "Predicted probability of attending NSdP", 
+       x = "Has attended Copacabana?")
+
+
+```
+
+We notice that the predicted probability of attending is considerably higher for individuals who reported having been to Copacabana. While these results are consistent with the importance of pre-existing belief structures in the adoption of new ritual practices, we again caution against strong causal interpretations. For example, it may be the case that a social desirability bias towards presenting as pious is driving the relationship. In other words, individuals that want the interviewers to see them as good Catholics are more likely to report going to both sites.
+
+/newpage
+
+## References:
